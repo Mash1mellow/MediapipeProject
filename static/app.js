@@ -47,11 +47,15 @@ video.addEventListener('loadedmetadata', () => {
 
 async function startCamera() {
     try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user', width: { ideal: 720 }, height: { ideal: 960 } }, audio: false });
         video.srcObject = stream;
         await video.play();
-        setStatus('Camera started. Looking for face...');
-        requestAnimationFrame(detectExpressions);
+        
+        // Wait for video to be ready before starting detection
+        setTimeout(() => {
+            setStatus('🎥 Camera ready! Show your face...');
+            requestAnimationFrame(detectExpressions);
+        }, 800);
     } catch (error) {
         console.error(error);
         setStatus('Unable to open camera. Allow camera access and try again.');
@@ -64,22 +68,26 @@ async function detectExpressions() {
         return;
     }
 
-    const displaySize = { width: video.videoWidth, height: video.videoHeight };
-    faceapi.matchDimensions(overlay, displaySize);
+    try {
+        const displaySize = { width: video.videoWidth, height: video.videoHeight };
+        faceapi.matchDimensions(overlay, displaySize);
 
-    const result = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
-        .withFaceExpressions();
+        const result = await faceapi
+            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 }))
+            .withFaceExpressions();
 
-    const ctx = overlay.getContext('2d');
-    ctx.clearRect(0, 0, overlay.width, overlay.height);
+        const ctx = overlay.getContext('2d');
+        ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-    if (result) {
-        const resized = faceapi.resizeResults(result, displaySize);
-        faceapi.draw.drawDetections(overlay, resized);
-        setStatus(chooseEmotion(result.expressions));
-    } else {
-        setStatus('No face found yet. Please move your face into the camera frame.');
+        if (result) {
+            const resized = faceapi.resizeResults(result, displaySize);
+            faceapi.draw.drawDetections(overlay, resized);
+            setStatus(chooseEmotion(result.expressions));
+        } else {
+            setStatus('📷 Adjusting camera... Position your face closer.');
+        }
+    } catch (error) {
+        console.error('Detection error:', error);
     }
 
     requestAnimationFrame(detectExpressions);
