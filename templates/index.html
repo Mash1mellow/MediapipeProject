@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Mobile Face Emotion Reader</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+    <div class="page-shell">
+        <header>
+            <h1>Face Emotion Reader</h1>
+            <p>Use your phone or laptop camera to read happy / sad expressions live in the browser.</p>
+        </header>
+
+        <section class="camera-card">
+            <div class="video-shell">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="overlay"></canvas>
+            </div>
+
+            <div class="status-bar">
+                <div id="emotion-label" class="emotion-label">Preparing face reader…</div>
+                <button id="start-button">Start Camera</button>
+            </div>
+
+            <div class="info-box">
+                <p>Open this page on your phone while your mobile browser and your computer are on the same Wi-Fi network.</p>
+                <p>Example address: <code>http://&lt;computer-ip&gt;:5000</code></p>
+                <p>Allow camera permission, then hold the phone so your face is visible.</p>
+            </div>
+        </section>
+
+        <section class="notes-card">
+            <h2>How it works</h2>
+            <ul>
+                <li>The browser captures live video from your front camera.</li>
+                <li>The page uses face-api.js to detect the face expression.</li>
+                <li>It classifies the face as <strong>Happy</strong>, <strong>Sad</strong>, or <strong>Neutral</strong>.</li>
+            </ul>
+        </section>
+
+        <footer>
+            <p>Built with Flask and face-api.js in the browser.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <script src="/static/app.js"></script>
+</body>
+</html>

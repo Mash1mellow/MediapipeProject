@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment
+venv/
+.env
+
+# VS Code
+.vscode/
+
+# Uploads
+*.egg-info/
+*.egg
+
+# OS files
+.DS_Store
+Thumbs.db
