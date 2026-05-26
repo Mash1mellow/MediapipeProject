@@ -11,9 +11,15 @@ function setStatus(text) {
 
 async function loadFaceApiModels() {
     setStatus('Loading face detection models...');
-    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-    setStatus('Models loaded. Press Start Camera.');
+    try {
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+        console.log('✅ Models loaded successfully');
+        setStatus('✅ Ready! Press Start Camera.');
+    } catch (error) {
+        console.error('❌ Model loading error:', error);
+        setStatus('❌ Error loading models. Check internet connection.');
+    }
 }
 
 function chooseEmotion(expressions) {
@@ -72,19 +78,27 @@ async function detectExpressions() {
         const displaySize = { width: video.videoWidth, height: video.videoHeight };
         faceapi.matchDimensions(overlay, displaySize);
 
-        const result = await faceapi
-            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.3 }))
+        // Try with very low threshold for mobile
+        let result = await faceapi
+            .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 416, scoreThreshold: 0.1 }))
             .withFaceExpressions();
+
+        // If not found, try with smaller input size
+        if (!result) {
+            result = await faceapi
+                .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.2 }))
+                .withFaceExpressions();
+        }
 
         const ctx = overlay.getContext('2d');
         ctx.clearRect(0, 0, overlay.width, overlay.height);
 
-        if (result) {
+        if (result && result.expressions) {
             const resized = faceapi.resizeResults(result, displaySize);
             faceapi.draw.drawDetections(overlay, resized);
             setStatus(chooseEmotion(result.expressions));
         } else {
-            setStatus('📷 Adjusting camera... Position your face closer.');
+            setStatus('📷 No face yet... Adjust lighting and get closer.');
         }
     } catch (error) {
         console.error('Detection error:', error);
@@ -95,10 +109,13 @@ async function detectExpressions() {
 
 startButton.addEventListener('click', async () => {
     startButton.disabled = true;
-    setStatus('Starting camera...');
+    setStatus('🎥 Starting camera...');
+    console.log('Camera button clicked');
     await startCamera();
 });
 
 window.addEventListener('load', async () => {
+    console.log('Page loaded, loading models...');
     await loadFaceApiModels();
+    console.log('Models initialization complete');
 });
